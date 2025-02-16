@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservation du Van</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+        input, button { margin-top: 10px; padding: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Réserver le van 🚐</h2>
+        <label for="date">Choisir une date :</label>
+        <input type="text" id="date" placeholder="Sélectionnez une date">
+        
+        <label for="name">Votre Nom :</label>
+        <input type="text" id="name" placeholder="Entrez votre nom">
+        
+        <label for="email">Votre Email :</label>
+        <input type="email" id="email" placeholder="Entrez votre email">
+        
+        <button onclick="reserver()">Réserver</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const scriptURL = "TON_URL_GOOGLE_APPS_SCRIPT"; // Mets ici l'URL de ton Apps Script
+
+        $(document).ready(function () {
+            // Initialiser le calendrier avec les dates réservées
+            fetch(scriptURL + "?action=getReservations")
+                .then(response => response.json())
+                .then(data => {
+                    flatpickr("#date", {
+                        minDate: "today",
+                        disable: data, // Désactiver les dates déjà réservées
+                        dateFormat: "Y-m-d"
+                    });
+                });
+        });
+
+        function reserver() {
+            let date = $("#date").val();
+            let nom = $("#name").val();
+            let email = $("#email").val();
+
+            if (!date || !nom || !email) {
+                $("#status").text("Veuillez remplir tous les champs !").css("color", "red");
+                return;
+            }
+
+            fetch(scriptURL + "?action=ajouterReservation&date=" + date + "&nom=" + nom + "&email=" + email)
+                .then(response => response.text())
+                .then(data => {
+                    $("#status").text(data).css("color", data.includes("confirmée") ? "green" : "red");
+                    if (data.includes("confirmée")) {
+                        setTimeout(() => location.reload(), 2000); // Recharger après confirmation
+                    }
+                })
+                .catch(error => console.error("Erreur :", error));
+        }
+    </script>
+
+</body>
+</html>
